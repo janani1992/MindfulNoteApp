@@ -1,0 +1,16 @@
+Note Application
+
+Software Prequisites:
+ - Java 21 (Oracle openJDK 21)
+ - gradle 8 & above
+ - docker 
+ - psql client
+
+
+Set up project:
+Step 1: clone the repository
+Step 2: go to database folder in the project & run `docker -t build migration:v2 .`
+Step 3: In the root project, run docker compose up
+Step 4: build the project, ./gradlew build
+Step 5: run the project ./gradlew bootRun
+Step 6: use postman to call the api's
