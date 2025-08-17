@@ -1,8 +1,14 @@
 #!/bin/bash
+set -e
 
-path="./database/db"
+# Wait for Postgres to be ready
+until PGPASSWORD="${POSTGRES_PASSWORD:-genLife}" psql -h database -U "${POSTGRES_USER:-user}" -d "${POSTGRES_DB:-noteapp}" -c '\q' 2>/dev/null; do
+  echo "Waiting for database to be ready..."
+  sleep 2
+done
 
-for file in "$path"/*; do
-  echo $file
-  PGPASSWORD=genLife psql -U user -p 5432 -d noteapp -h database -f "${file}"
+# Run all SQL files in ./db
+for file in ./db/*.sql; do
+  echo "Running migration: $file"
+  PGPASSWORD="${POSTGRES_PASSWORD:-genLife}" psql -U "${POSTGRES_USER:-user}" -h database -d "${POSTGRES_DB:-noteapp}" -f "$file"
 done
