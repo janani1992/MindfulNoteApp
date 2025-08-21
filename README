@@ -1,7 +1,7 @@
 Note Application
 
 Software Prequisites:
- - Java 21 (Oracle openJDK 21)
+ - Java 17 (Oracle openJDK 17)
  - gradle 8 & above
  - docker 
  - psql client
@@ -9,8 +9,7 @@ Software Prequisites:
 
 Set up project:
 Step 1: clone the repository
-Step 2: go to database folder in the project & run `docker -t build migration:v2 .`
-Step 3: In the root project, run docker compose up
-Step 4: build the project, ./gradlew build
-Step 5: run the project ./gradlew bootRun
-Step 6: use postman to call the api's
+Step 2: build the project, ./gradlew build
+Step 3: Build docker images. docker build -t mindfulnoteapp:latest .
+Step 4: In the root project, run docker compose up
+Step 5: use postman to call the api's

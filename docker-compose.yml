@@ -1,6 +1,5 @@
 services:
   database:
-    build: .
     image: postgres:16-alpine
     ports:
       - 5434:5432
@@ -9,10 +8,23 @@ services:
     networks:
       - my-network
   migrate:
-    build: .
+    build:
+      context: ./database
     image: migration:v2
     links:
       - database
+    networks:
+      - my-network
+  app:
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+    command: ["sh", "-c", "until pg_isready -h database -p 5432 -U user; do sleep 2; done && java -jar app.jar"]
+    env_file:
+      - .env
     networks:
       - my-network
 networks:
