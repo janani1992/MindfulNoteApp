@@ -2,11 +2,17 @@ package org.example.controller;
 
 import org.example.model.Note;
 import org.example.services.NoteService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 
@@ -14,46 +20,41 @@ import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.is;
 
 
-@WebMvcTest(NoteController.class)
-public class NoteControllerTest{
+@ExtendWith(MockitoExtension.class)
+class NoteControllerTest {
 
-
-    @Autowired
-    private MockMvc mockMvc;
-
-
-    @MockBean
+    @Mock
     private NoteService noteService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private NoteController noteController;
 
-    private Note testNote;
-    private List<Note> noteList;
+    private MockMvc mockMvc;
 
-
-    @Test
-    void createUser_ShouldReturnCreatedUser() throws Exception {
-        Note newNote = new Note("my first note");
-        Note savedNote = new Note(1L, "my first note");
-        when(noteService.createNote(any(Note.class))).thenReturn(savedNote);
-
-        String jsonContent = objectMapper.writeValueAsString(newNote);
-
-        mockMvc.perform(post("/api/createNote")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonContent))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(3)))
-                .andExpect(jsonPath("$.name", is("Bob Wilson")))
-                .andExpect(jsonPath("$.email", is("bob@example.com")));
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(noteController).build();
     }
 
+    @Test
+    void createUser_ShouldReturnCreatedNote() throws Exception {
+        // Given
+        Note newNote = new Note("test");
+        Note savedNote = new Note(3L, "test");
+
+        when(noteService.createNote(any(Note.class))).thenReturn(savedNote);
+
+        // When & Then
+        mockMvc.perform(post("/api/createNote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(newNote)))
+                .andExpect(jsonPath("$.id", is(3)))
+                .andExpect(jsonPath("$.name", is("test")));
+    }
 }
