@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class NoteService {
@@ -25,9 +26,7 @@ public class NoteService {
             throw new IllegalArgumentException("Note name cannot be null or empty");
         }
 
-        // Check for duplicate names if needed (this is likely where line 18 was causing issues)
-        // Instead of: if (note.name.equals(existingName)) - which causes NPE
-        // Use safe comparison:
+
         List<Note> existingNotes = noteRepository.findAll();
         for (Note existingNote : existingNotes) {
             if (Objects.equals(note.getName(), existingNote.getName())) {
@@ -35,9 +34,25 @@ public class NoteService {
             }
         }
 
-        // Trim the name to remove leading/trailing spaces
         note.setName(note.getName().trim());
 
         return noteRepository.save(note);
+    }
+
+    public Optional<Note> getNote(String id) {
+        return noteRepository.findById(Long.valueOf(id));
+    }
+
+    public Optional<Note> updateNote(Note note) {
+        Optional<Note> optionalNote = noteRepository.findById(note.getId());
+
+        if(optionalNote.isPresent()) {
+            Note existingNote = optionalNote.get();
+            existingNote.setName(note.getName());
+
+            return Optional.of(noteRepository.save(existingNote));
+        }
+
+        return Optional.empty();
     }
 }

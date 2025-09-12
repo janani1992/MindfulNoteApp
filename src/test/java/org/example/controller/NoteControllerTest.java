@@ -8,23 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 
-import java.util.*;
-
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.is;
-
 
 @ExtendWith(MockitoExtension.class)
 class NoteControllerTest {
@@ -35,26 +28,51 @@ class NoteControllerTest {
     @InjectMocks
     private NoteController noteController;
 
+    private ObjectMapper objectMapper;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(noteController).build();
     }
 
     @Test
-    void createUser_ShouldReturnCreatedNote() throws Exception {
-        // Given
+    void createNote_ShouldReturnCreatedNote() throws Exception {
         Note newNote = new Note("test");
         Note savedNote = new Note(3L, "test");
 
         when(noteService.createNote(any(Note.class))).thenReturn(savedNote);
 
-        // When & Then
         mockMvc.perform(post("/api/createNote")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(newNote)))
+                        .content(objectMapper.writeValueAsString(newNote)))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(3)))
                 .andExpect(jsonPath("$.name", is("test")));
+    }
+
+    @Test
+    void createNote_ShouldNotReturnNullNote() throws Exception {
+
+        when(noteService.createNote(any(Note.class))).thenThrow(new IllegalArgumentException("Note cannot be null"));
+
+        mockMvc.perform(post("/api/createNote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("null"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createNote_ShouldNotReturnNullName() throws Exception {
+        Note newNote = new Note(null);
+        String expectedErrorJson = "{\"error\": \"Note name cannot be null or empty\"}";
+        when(noteService.createNote(any(Note.class))).thenThrow(new IllegalArgumentException("Note name cannot be null or empty"));
+
+        mockMvc.perform(post("/api/createNote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newNote)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Note name cannot be null or empty"))); // <-- This line causes the error    }
     }
 }
