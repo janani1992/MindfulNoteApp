@@ -2,6 +2,7 @@ package org.example.services;
 
 import org.example.domain.NoteRepository;
 import org.example.model.Note;
+import org.example.model.Priority;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,25 +23,25 @@ public class NoteService {
             throw new IllegalArgumentException("Note cannot be null");
         }
 
-        if (note.getName() == null || note.getName().trim().isEmpty()) {
+        if (note.getTitle() == null || note.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Note name cannot be null or empty");
         }
 
 
         List<Note> existingNotes = noteRepository.findAll();
         for (Note existingNote : existingNotes) {
-            if (Objects.equals(note.getName(), existingNote.getName())) {
+            if (Objects.equals(note.getTitle(), existingNote.getTitle())) {
                 throw new IllegalArgumentException("A note with this name already exists");
             }
         }
 
-        note.setName(note.getName().trim());
+        note.setTitle(note.getTitle().trim());
 
         return noteRepository.save(note);
     }
 
-    public Optional<Note> getNote(String id) {
-        return noteRepository.findById(Long.valueOf(id));
+    public Optional<Note> getNoteById(Long id) {
+        return noteRepository.findById(id);
     }
 
     public Optional<Note> updateNote(Note note) {
@@ -48,11 +49,36 @@ public class NoteService {
 
         if(optionalNote.isPresent()) {
             Note existingNote = optionalNote.get();
-            existingNote.setName(note.getName());
+            existingNote.setTitle(note.getTitle());
 
             return Optional.of(noteRepository.save(existingNote));
         }
 
         return Optional.empty();
+    }
+
+    public boolean deleteNote(Long id) {
+        Optional<Note> note = noteRepository.findById(id);
+        if(note.isPresent()){
+            noteRepository.delete(note.get());
+            return true;
+        }
+        return false;
+    }
+
+    public List<Note> getAllNotes() {
+        return noteRepository.findAll();
+    }
+
+
+    public List<Note> getNotesSortedByPriority() {
+        return noteRepository.findAllNotesSortedByPriorityCreatedAtDesc();
+    }
+
+    public List<Note> getNotesByPriority(Priority priority) {
+        return noteRepository.findAll()
+                .stream()
+                .filter(note -> note.getPriority() == priority)
+                .toList();
     }
 }
