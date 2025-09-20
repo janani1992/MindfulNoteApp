@@ -1,9 +1,12 @@
 package org.example.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.model.Note;
 import org.example.model.Priority;
 import org.example.services.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +21,12 @@ public class NoteController {
     @Autowired
     private NoteService noteService;
 
+    Logger logger = LogManager.getLogger(SpringApplication.class);
+
     @PostMapping("/createNote")
     public ResponseEntity<Note> createNote(@RequestBody Note note) {
+        logger.info("creating notes");
+
         if (note.getTitle() == null || note.getTitle().trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -39,6 +46,7 @@ public class NoteController {
 
     @GetMapping("/notes")
     public ResponseEntity<List<Note>> getAllNotes(@RequestParam(defaultValue = "false") boolean sortByPriority) {
+        logger.info("getting notes");
         return ResponseEntity.ok(sortByPriority? noteService.getNotesSortedByPriority() : noteService.getAllNotes());
     }
 

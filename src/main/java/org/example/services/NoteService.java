@@ -1,9 +1,12 @@
 package org.example.services;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.domain.NoteRepository;
 import org.example.model.Note;
 import org.example.model.Priority;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,8 @@ public class NoteService {
 
     @Autowired
     private NoteRepository noteRepository;
+
+    Logger logger = LogManager.getLogger(SpringApplication.class);
 
     @Transactional
     public Note createNote(Note note) {
@@ -35,6 +40,7 @@ public class NoteService {
             }
         }
 
+        logger.info("saving note");
         note.setTitle(note.getTitle().trim());
 
         return noteRepository.save(note);
